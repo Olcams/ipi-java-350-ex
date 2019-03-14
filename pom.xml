@@ -145,6 +145,7 @@
 					</targetTests>
 				</configuration>
 			</plugin>
+			<!--
 			<plugin>
 				<groupId>com.thoughtworks.gauge.maven</groupId>
 				<artifactId>gauge-maven-plugin</artifactId>
@@ -161,7 +162,7 @@
 					</execution>
 				</executions>
 			</plugin>
-
+					-->
 		</plugins>
 	</build>
 
