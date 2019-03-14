@@ -19,9 +19,9 @@
 	</properties>
 	
 	<scm>
-		<connection>scm:git:git@github.com:pjvilloud/ipi-java-350-ex.git</connection>
-		<url>https://github.com/pjvilloud/ipi-java-350-ex.git</url>
-		<developerConnection>scm:git:git@github.com:pjvilloud/ipi-java-350-ex.git</developerConnection>
+		<connection>scm:git:git@github.com:thouni2009/ipi-java-350-ex.git</connection>
+		<url>https://github.com/thouni2009/ipi-java-350-ex.git</url>
+		<developerConnection>scm:git:git@github.com:thouni2009/ipi-java-350-ex.git</developerConnection>
 	</scm>
 
 	<dependencies>
