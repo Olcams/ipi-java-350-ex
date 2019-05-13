@@ -21,7 +21,6 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 
 import static org.mockito.Mockito.*;
 
@@ -144,48 +143,104 @@ public class EmployeServiceTest {
         Assertions.assertEquals("Limite des 100000 matricules atteinte !", e.getMessage());
     }
 
-    /* Tentative d'écriture des tests mockés dans une seule procédure
-     * Je ne sais pas si c'est 'conventionnel', mais j'ai essayé pour ma culture générale
-     * Fonctionne correctement, mais si une assertion est fausse, les autres ne sont pas vérifiées
-     * Ce qui complique le débuggage
-     */
     @Test
-    public void calculPerformanceCommercial() throws EmployeException {
+    public void testCalculPerformanceCommercialMoinsDe20() throws EmployeException {
         //Given
-        Integer performance = 3;
-        when(employeRepository.avgPerformanceWhereMatriculeStartsWith("C")).thenReturn(4.0);
-        doReturn(new Employe("Doe", "John", "C00001", LocalDate.now(), 1000.0, performance, 1.0)).when(employeRepository).findByMatricule("C00001");
-        doReturn(new Employe("Doe", "John", "C00002", LocalDate.now(), 1000.0, performance, 1.0)).when(employeRepository).findByMatricule("C00002");
-        doReturn(new Employe("Doe", "John", "C00003", LocalDate.now(), 1000.0, performance, 1.0)).when(employeRepository).findByMatricule("C00003");
-        doReturn(new Employe("Doe", "John", "C00004", LocalDate.now(), 1000.0, performance, 1.0)).when(employeRepository).findByMatricule("C00004");
-        doReturn(new Employe("Doe", "John", "C00005", LocalDate.now(), 1000.0, performance, 1.0)).when(employeRepository).findByMatricule("C00005");
+        String matricule = "C00001";
+        Long caTraite = Long.valueOf(1000);
+        Long objectifCa = Long.valueOf(15000);
+        when(employeRepository.findByMatricule("C00001")).thenReturn(new Employe("Doe", "John", matricule, LocalDate.now(), 1700.0, 1, 1.0));
+        when(employeRepository.avgPerformanceWhereMatriculeStartsWith("C")).thenReturn(1.0);
 
         //When
-
-        // Test si le chiffre d'affaire est inférieur de plus de 20% à l'objectif fixé, le commercial retombe à la performance de base
-        employeService.calculPerformanceCommercial("C00001", 500L, 1000L);
-
-        // Test si le chiffre d'affaire est inférieur entre 20% et 5% par rapport à l'ojectif fixé, il perd 2 de performance (dans la limite de la performance de base)
-        employeService.calculPerformanceCommercial("C00002", 900L, 1000L);
-
-        // Test si le chiffre d'affaire est entre -5% et +5% de l'objectif fixé, la performance reste la même.
-        employeService.calculPerformanceCommercial("C00003", 1000L, 1000L);
-
-        // Test si le chiffre d'affaire est supérieur entre 5 et 20%, il gagne 1 de performance
-        employeService.calculPerformanceCommercial("C00004", 1100L, 1000L);
-
-        // Test si le chiffre d'affaire est supérieur de plus de 20%, il gagne 4 de performance
-        // et si la performance ainsi calculée est supérieure à la moyenne des performances des commerciaux, il reçoit + 1 de performance.
-        employeService.calculPerformanceCommercial("C00005", 2000L, 1000L);
+        employeService.calculPerformanceCommercial(matricule, caTraite, objectifCa);
 
         //Then
-        ArgumentCaptor<Employe> employeArgumentCaptor = ArgumentCaptor.forClass(Employe.class);
-        verify(employeRepository, times(5)).save(employeArgumentCaptor.capture());
-        List<Employe> capturedEmploye = employeArgumentCaptor.getAllValues();
-        Assertions.assertEquals(Entreprise.PERFORMANCE_BASE, capturedEmploye.get(0).getPerformance());
-        Assertions.assertEquals(Entreprise.PERFORMANCE_BASE, capturedEmploye.get(1).getPerformance());
-        Assertions.assertEquals(performance, capturedEmploye.get(2).getPerformance());
-        Assertions.assertEquals(performance + 1, capturedEmploye.get(3).getPerformance().intValue());
-        Assertions.assertEquals(performance + 4 + 1, capturedEmploye.get(4).getPerformance().intValue());
+        ArgumentCaptor<Employe> performanceArgumentCaptor = ArgumentCaptor.forClass(Employe.class);
+        verify(employeRepository, times(1)).save(performanceArgumentCaptor.capture());
+
+        //1000 est inférieur à plus de 20% de 15000, donc performance de base + 1 car supérieure à la performance moyenne des commerciaux
+        Assertions.assertEquals(1, performanceArgumentCaptor.getValue().getPerformance().intValue());
     }
+
+    @Test
+    public void testCalculPerformanceCommercialEntre5Et20DeMoins() throws EmployeException {
+        //Given
+        String matricule = "C00001";
+        Long caTraite = Long.valueOf(13000);
+        Long objectifCa = Long.valueOf(15000);
+        when(employeRepository.findByMatricule("C00001")).thenReturn(new Employe("Doe", "John", matricule, LocalDate.now(), 1700.0, 2, 1.0));
+        when(employeRepository.avgPerformanceWhereMatriculeStartsWith("C")).thenReturn(1.0);
+
+        //When
+        employeService.calculPerformanceCommercial(matricule, caTraite, objectifCa);
+
+        //Then
+        ArgumentCaptor<Employe> performanceArgumentCaptor = ArgumentCaptor.forClass(Employe.class);
+        verify(employeRepository, times(1)).save(performanceArgumentCaptor.capture());
+
+        //Performance de base
+        Assertions.assertEquals(1, performanceArgumentCaptor.getValue().getPerformance().intValue());
+    }
+
+    @Test
+    public void testCalculPerformanceCommercialEntreMoins5EtPlus5() throws EmployeException {
+        //Given
+        String matricule = "C00001";
+        Long caTraite = Long.valueOf(10000);
+        Long objectifCa = Long.valueOf(10000);
+        when(employeRepository.findByMatricule("C00001")).thenReturn(new Employe("Doe", "John", matricule, LocalDate.now(), 1700.0, 3, 1.0));
+        when(employeRepository.avgPerformanceWhereMatriculeStartsWith("C")).thenReturn(1.0);
+
+        //When
+        employeService.calculPerformanceCommercial(matricule, caTraite, objectifCa);
+
+        //Then
+        ArgumentCaptor<Employe> performanceArgumentCaptor = ArgumentCaptor.forClass(Employe.class);
+        verify(employeRepository, times(1)).save(performanceArgumentCaptor.capture());
+
+        //Performance + 1 car supérieure à la performance moyenne des commerciaux
+        Assertions.assertEquals(4, performanceArgumentCaptor.getValue().getPerformance().intValue());
+    }
+
+    @Test
+    public void testCalculPerformanceCommercialEntre5Et20() throws EmployeException {
+        //Given
+        String matricule = "C00001";
+        Long caTraite = Long.valueOf(1100);
+        Long objectifCa = Long.valueOf(1000);
+        when(employeRepository.findByMatricule("C00001")).thenReturn(new Employe("Doe", "John", matricule, LocalDate.now(), 1700.0, 1, 1.0));
+        when(employeRepository.avgPerformanceWhereMatriculeStartsWith("C")).thenReturn(1.0);
+
+        //When
+        employeService.calculPerformanceCommercial(matricule, caTraite, objectifCa);
+
+        //Then
+        ArgumentCaptor<Employe> performanceArgumentCaptor = ArgumentCaptor.forClass(Employe.class);
+        verify(employeRepository, times(1)).save(performanceArgumentCaptor.capture());
+
+        // 1 + 1 (car enre 5 et 20% de plus) + 1 (car supérieure à la performance moyenne des commerciaux) = 3
+        Assertions.assertEquals(3, performanceArgumentCaptor.getValue().getPerformance().intValue());
+    }
+
+    @Test
+    public void testCalculPerformanceCommercialPlusDe20() throws EmployeException {
+        //Given
+        String matricule = "C00001";
+        Long caTraite = Long.valueOf(20000);
+        Long objectifCa = Long.valueOf(1000);
+        when(employeRepository.findByMatricule("C00001")).thenReturn(new Employe("Doe", "John", matricule, LocalDate.now(), 1700.0, 3, 1.0));
+        when(employeRepository.avgPerformanceWhereMatriculeStartsWith("C")).thenReturn(1.0);
+
+        //When
+        employeService.calculPerformanceCommercial(matricule, caTraite, objectifCa);
+
+        //Then
+        ArgumentCaptor<Employe> performanceArgumentCaptor = ArgumentCaptor.forClass(Employe.class);
+        verify(employeRepository, times(1)).save(performanceArgumentCaptor.capture());
+
+        // 3 + 4 + 1 (car supérieure à la performance moyenne des commerciaux)
+        Assertions.assertEquals(8, performanceArgumentCaptor.getValue().getPerformance().intValue());
+    }
+
 }

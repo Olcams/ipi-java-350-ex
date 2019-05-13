@@ -1,4 +1,4 @@
-ppackage com.ipiecoles.java.java350.acceptance;
+package com.ipiecoles.java.java350.acceptance;
 
 import com.ipiecoles.java.java350.repository.EmployeRepository;
 import cucumber.api.CucumberOptions;

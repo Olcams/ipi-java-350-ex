@@ -74,50 +74,19 @@ public class Employe {
         return getNbRtt(LocalDate.now());
     }
 
-    /**
-     * Nombre de jours de RTT =
-     *   Nombre de jours dans l'année
-     * – plafond maximal du forfait jours de la convention collective
-     * – nombre de jours de repos hebdomadaires
-     * – jours de congés payés
-     * – nombre de jours fériés tombant un jour ouvré
-     *
-     * Au prorata de son pourcentage d'activité (arrondi au supérieur)
-     *
-     * @return le nombre de jours de RTT
-     */
-    public Integer getNbRtt(LocalDate date){
-        // Les résultats de la ternaire étaient inversés
-        int nbJoursAnnee = date.isLeapYear() ? 366 : 365;
-
-        // Ne pas oublier les breaks dans les bloc switch, et éviter les if en ligne
-        // Ajout d'une condition default pour éviter un code smell
-        int nbJoursWeekend;
-        switch (LocalDate.of(date.getYear(),1,1).getDayOfWeek()){
-            case FRIDAY:
-                nbJoursWeekend = date.isLeapYear() ? 105 : 104;
-                break;
-            case SATURDAY:
-                nbJoursWeekend = date.isLeapYear() ? 106 : 105;
-                break;
-            case SUNDAY:
-                nbJoursWeekend = date.isLeapYear() ? 104 : 105;
-                break;
+    public Integer getNbRtt(LocalDate d){
+        int nbJoursAnnee = d.isLeapYear() ? 366 : 365;
+        int nbJoursReposAnnee = 104;
+        switch (LocalDate.of(d.getYear(),1,1).getDayOfWeek()){
+            case THURSDAY: if(d.isLeapYear()) nbJoursReposAnnee =  nbJoursReposAnnee + 1; break;
+            case FRIDAY: if(d.isLeapYear()) nbJoursReposAnnee =  nbJoursReposAnnee + 2; else nbJoursReposAnnee =  nbJoursReposAnnee + 1; break;
+            case SATURDAY: nbJoursReposAnnee = nbJoursReposAnnee + 1; break;
             default:
-                nbJoursWeekend = 104;
+                break;
         }
-
-        // Si la date demandée est inférieure à l'année en cours, on ne peut trouver les jours fériés dans la liste
-        // Pour éviter l'exception, on passe le nbRtt à 0 dans ce cas
-        Double nbRtt = 0.0;
-        if (date.getYear() >= LocalDate.now().getYear()) {
-            Long nbJoursFeries = Entreprise.joursFeries(date).stream().filter(localDate -> localDate.getDayOfWeek().getValue() <= DayOfWeek.FRIDAY.getValue()).count();
-
-            // floor au lieu de ceil. On arrondi au plus bas si un jour n'est pas complétement acquis
-            nbRtt = Math.floor((nbJoursAnnee - Entreprise.NB_JOURS_MAX_FORFAIT - nbJoursWeekend - Entreprise.NB_CONGES_BASE - nbJoursFeries) * tempsPartiel);
-        }
-
-        return nbRtt.intValue();
+        int nbJoursFeries = (int) Entreprise.joursFeries(d).stream().filter(localDate -> localDate.getDayOfWeek().getValue() <= DayOfWeek.FRIDAY.getValue()).count();
+        int nbRtt = (int) Math.ceil((nbJoursAnnee - Entreprise.NB_JOURS_MAX_FORFAIT - nbJoursReposAnnee - Entreprise.NB_CONGES_BASE - nbJoursFeries) * tempsPartiel);
+        return nbRtt;
     }
 
     /**
@@ -154,14 +123,22 @@ public class Employe {
         return Math.round(prime * this.tempsPartiel * 100)/100.0;
     }
 
+
+    /** Calcul de l'augmentation de salaire selon la règle :
+     * On fera l'hypothèse que si le pourcentage d'augmentation est nul, négatif ou supérieur à 1
+     * (donc 100%), alors le salaire restera le même.
+     * @param pourcentage
+     * @return le salaire augmenté
+     */
     //Augmenter salaire
-    public void augmenterSalaire(double pourcentage){
-        if (pourcentage < -1.0 || salaire < 0.0) {
-            salaire = 0.0;
+
+    public Double augmenterSalaire(double pourcentage){
+        Double salaireAugmente = Math.ceil(this.getSalaire() * (1 + pourcentage * 100)/100.0)*10;
+
+        if(pourcentage <= 0.0 || pourcentage > 1.0){
+            salaireAugmente = this.getSalaire();
         }
-        else {
-            salaire = salaire * (1 + pourcentage);
-        }
+            return salaireAugmente;
     }
 
     public Long getId() {
@@ -277,3 +254,4 @@ public class Employe {
         return Objects.hash(id, nom, prenom, matricule, dateEmbauche, salaire, performance);
     }
 }
+

@@ -85,112 +85,69 @@ public class EmployeTest {
 
     }
 
-    // Tests méthode augmenterSalaire
-    // Cas augmentation de 0%
+    //Tests unitaires de la méthode augmenterSalaire d'Employe :
     @Test
-    public void augmenterSalaireDeZero(){
+    public void getSalaireAugmentePourcentageNul(){
         //Given
         Employe e = new Employe();
-        e.setSalaire(1000.0);
+        e.setSalaire(1700.0);
 
         //When
-        e.augmenterSalaire(0.0);
+        Double salaireAugmente = e.augmenterSalaire(0.0);
 
         //Then
-        Assertions.assertEquals(1000.0, e.getSalaire().doubleValue());
+        Assertions.assertEquals(1700.0,salaireAugmente.doubleValue());
     }
 
-    // Cas augmentation négative (diminution)
     @Test
-    public void augmenterSalaireDiminution(){
+    public void getSalaireAugmentePourcentageSuperieurA1(){
         //Given
         Employe e = new Employe();
-        e.setSalaire(1000.0);
+        e.setSalaire(1700.0);
 
         //When
-        e.augmenterSalaire(-0.1);
+        Double salaireAugmente = e.augmenterSalaire(2.0);
 
         //Then
-        Assertions.assertEquals(900.0, e.getSalaire().doubleValue());
+        Assertions.assertEquals(1700.0,salaireAugmente.doubleValue());
     }
 
-    // Cas augmentation standard (augmentation réaliste)
     @Test
-    public void augmenterSalaire(){
+    public void getSalaireAugmentePourcentagePositif(){
         //Given
         Employe e = new Employe();
-        e.setSalaire(1000.0);
+        e.setSalaire(1700.0);
 
         //When
-        e.augmenterSalaire(0.1);
+        Double salaireAugmente = e.augmenterSalaire(0.1);
 
         //Then
-        Assertions.assertEquals(1100.0, e.getSalaire().doubleValue());
+        Assertions.assertEquals(1870.0,salaireAugmente.doubleValue());
     }
 
-    // Cas augmentation de moins de 100% (limite basse)
-    @Test
-    public void augmenterSalaireMoinsCent(){
-        //Given
-        Employe e = new Employe();
-        e.setSalaire(1000.0);
-
-        //When
-        e.augmenterSalaire(-2.0);
-
-        //Then
-        Assertions.assertEquals(0.0, e.getSalaire().doubleValue());
-    }
-
-    // Cas salaire à 0
-    @Test
-    public void augmenterSalaireZero(){
-        //Given
-        Employe e = new Employe();
-        e.setSalaire(0.0);
-
-        //When
-        e.augmenterSalaire(0.1);
-
-        //Then
-        Assertions.assertEquals(0.0, e.getSalaire().doubleValue());
-    }
-
-    // Cas salaire négatif
-    @Test
-    public void augmenterSalaireNeg(){
-        //Given
-        Employe e = new Employe();
-        e.setSalaire(-1000.0);
-
-        //When
-        e.augmenterSalaire(0.1);
-
-        //Then
-        Assertions.assertEquals(0.0, e.getSalaire().doubleValue());
-    }
-
-
-    // Tests fonction getNbRtt, en utilisant comme condition des temps pleins et partiels, et des années bissextiles ou non
+    //Tests paramétrés de la méthode getNbRtt d'Employe :
     @ParameterizedTest
     @CsvSource({
-            "2016, 0.5, 0",
-            "2019, 1.0, 8",
-            "2021, 0.5, 5",
-            "2022, 1.0, 10",
-            "2032, 0.5, 6"
+            //Calcul pour 2019 : 365 - 218 - 104 - 10 - 25 = 8
+            "2019-03-31, 1, 8",
+            "2019-03-31, 0.5, 4",
+            "2021-06-06, 1.0, 10",
+            "2021-06-06, 0.5, 5",
+            "2022-06-06, 1, 10",
+            "2032-06-06, 1, 11",
+            "2032-02-29, 0.5, 6"
     })
-    public void getNbRtt(Integer annee, Double tempsPartiel, Integer nbRttAttendu){
+    public void getNbRtt(LocalDate date, Double tempsPartiel, Integer nbRttOk){
         //Given
-        Employe employe = new Employe();
-        employe.setTempsPartiel(tempsPartiel);
-        LocalDate date = LocalDate.of(annee, 1, 1);
+        Employe employe = new Employe("Doe", "John", "M00001", LocalDate.now(), Entreprise.SALAIRE_BASE, 1, tempsPartiel);
 
         //When
         Integer nbRttCalcule = employe.getNbRtt(date);
 
         //Then
-        Assertions.assertEquals(nbRttAttendu, nbRttCalcule);
+        Assertions.assertEquals(nbRttOk,nbRttCalcule);
 
     }
+
+
 }

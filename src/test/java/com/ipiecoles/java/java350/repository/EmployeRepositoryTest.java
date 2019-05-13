@@ -3,8 +3,6 @@ package com.ipiecoles.java.java350.repository;
 import com.ipiecoles.java.java350.model.Employe;
 import com.ipiecoles.java.java350.model.Entreprise;
 import org.junit.jupiter.api.*;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.CsvSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 
@@ -59,29 +57,23 @@ public class EmployeRepositoryTest {
         Assertions.assertEquals("40325", lastMatricule);
     }
 
-
-    /* Test de la fonction avgPerformanceWhereMatriculeStartsWith
-     * On utilise des paramètres de différents métiers
-     */
-    @ParameterizedTest
-    @CsvSource({
-            "'C', 4.5",
-            "'M', 3.5",
-            "'T', 2.5"
-    })
-    public void testAvgPerformanceWhereMatriculeStartsWith(String premiereLettreMatricule, Double avgPerf){
+    @Test
+    public void IntegrationAvgPerformanceWhereMatriculeStartsWith() {
         //Given
-        employeRepository.save(new Employe("Doe", "John", "T12345", LocalDate.now(), Entreprise.SALAIRE_BASE, 1, 1.0));
-        employeRepository.save(new Employe("Doe", "Jon", "T12346", LocalDate.now(), Entreprise.SALAIRE_BASE, 4, 1.0));
-        employeRepository.save(new Employe("Doe", "Jane", "M40325", LocalDate.now(), Entreprise.SALAIRE_BASE, 2, 1.0));
-        employeRepository.save(new Employe("Doe", "Jerry", "M40326", LocalDate.now(), Entreprise.SALAIRE_BASE, 5, 1.0));
-        employeRepository.save(new Employe("Doe", "Jim", "C06432", LocalDate.now(), Entreprise.SALAIRE_BASE, 3, 1.0));
-        employeRepository.save(new Employe("Doe", "Jason", "C06433", LocalDate.now(), Entreprise.SALAIRE_BASE, 6, 1.0));
+        employeRepository.save(new Employe("Doe", "John", "C00001", LocalDate.now(), Entreprise.SALAIRE_BASE, 1, 1.0));
+        employeRepository.save(new Employe("Snow", "John", "C99999", LocalDate.now(), Entreprise.SALAIRE_BASE, 2, 0.5));
+        employeRepository.save(new Employe("Toto", "John", "C99998", LocalDate.now(), Entreprise.SALAIRE_BASE, 4, 1.0));
+        employeRepository.save(new Employe("Tutu", "John", "C99997", LocalDate.now(), Entreprise.SALAIRE_BASE, 1, 0.5));
+        employeRepository.save(new Employe("Titi", "John", "C99996", LocalDate.now(), Entreprise.SALAIRE_BASE, 1, 1.0));
+        employeRepository.save(new Employe("Tata", "John", "C99995", LocalDate.now(), Entreprise.SALAIRE_BASE, 3, 1.0));
+
 
         //When
-        Double avgPerfCalculee = employeRepository.avgPerformanceWhereMatriculeStartsWith(premiereLettreMatricule);
+        Double performanceMoyenne = employeRepository.avgPerformanceWhereMatriculeStartsWith("C");
 
         //Then
-        Assertions.assertEquals(avgPerf, avgPerfCalculee);
+        // performance moyenne = (1+2+4+1+1+3)/6 = 2
+        Assertions.assertEquals(2, performanceMoyenne.doubleValue());
+
     }
 }
